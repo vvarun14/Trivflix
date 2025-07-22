@@ -1,16 +1,22 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./Navbar.css";
 import logo from "../../assets/trivflix-logo.png";
 import search_icon from "../../assets/search_icon.svg";
 import bell_icon from "../../assets/bell_icon.svg";
 import profile_img from "../../assets/profile_img.png";
 import caret_icon from "../../assets/caret_icon.svg";
-import { logout } from "../../firebase";
+import { login, logout } from "../../firebase";
 
 const Navbar = () => {
   const navRef = useRef();
+  const [name, setName] = useState("Profile");
 
   useEffect(() => {
+    const storedName = localStorage.getItem("useremail");
+    if (storedName) {
+      setName(storedName);
+    }
+
     window.addEventListener("scroll", () => {
       {
         window.scrollY >= 80
@@ -35,7 +41,7 @@ const Navbar = () => {
       </div>
       <div className="navbar-right">
         <img src={search_icon} alt="" className="icons" />
-        <p>Children</p>
+        <p>{name}</p>
         <img src={bell_icon} alt="" className="icons" />
         <div className="navbar-profile">
           <img src={profile_img} alt="" className="profile" />

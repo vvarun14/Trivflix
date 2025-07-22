@@ -7,6 +7,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { addDoc, collection, getFirestore } from "firebase/firestore";
+import { toast } from "react-toastify";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAtdLBw0-xDqFNTC2SkXgn7_3bByY-fQCs",
@@ -30,31 +31,47 @@ const signup = async (name, email, password) => {
       email,
       password
     );
-    alert("Registration Successful");
     const user = response.user;
-    await addDoc(
-      collection(db, "user", {
-        uid: user.uid,
-        name,
-        authProvider: "local",
-        email,
-      })
-    );
+    await addDoc(collection(db, "user"), {
+      uid: user.uid,
+      name,
+      authProvider: "local",
+      email,
+    });
+
+    localStorage.setItem("useremail", email); // ✅ Store name
+    return { uid: user.uid, name, email }; // ✅ Return user info
   } catch (error) {
     console.log(error);
     if (error.code.indexOf("auth/") !== -1) {
-      // ⚠️ This line might break if error.code is not a string
-      alert(error.message);
+      // This line might break if error.code is not a string
+      toast.error(error.code.split("/")[1].split("-").join(" "));
     }
+    return null;
   }
 };
 
 const login = async (email, password) => {
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    // await signInWithEmailAndPassword(auth, email, password);
+
+    const response = await signInWithEmailAndPassword(auth, email, password);
+    const user = response.user;
+
+    const q = query(collection(db, "user"), where("uid", "==", user.uid));
+    const docs = await getDocs(q);
+
+    if (!docs.empty) {
+      const userData = docs.docs[0].data();
+      localStorage.setItem("useremail", userData.email); // ✅ Store email
+      return { uid: user.uid, name: userData.name, email };
+    } else {
+      return { uid: user.uid, name: null, email };
+    }
   } catch (error) {
     console.log(error);
-    alert(error);
+    toast.error(error.code.split("/")[1].split("-").join(" "));
+    return null;
   }
 };
 
